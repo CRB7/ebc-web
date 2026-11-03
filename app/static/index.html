@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EBC-A20 Banc</title>
+<link rel="stylesheet" href="/static/uPlot.min.css">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="logo">⚡</span> EBC-A20 <small>banc de test</small></div>
+  <nav>
+    <button data-tab="live" class="on">Direct</button>
+    <button data-tab="programs">Programmes</button>
+    <button data-tab="history">Historique</button>
+    <button data-tab="compare">Comparaison</button>
+  </nav>
+  <div class="conn"><span id="dot" class="dot"></span><span id="connText">—</span><span id="simBadge" class="badge" hidden>SIMULATEUR</span></div>
+</header>
+
+<main>
+<!-- ================================================================ DIRECT -->
+<section id="tab-live" class="tab on">
+  <div class="readouts">
+    <div class="ro v"><label>Tension</label><b id="roV">—</b><u>V</u></div>
+    <div class="ro i"><label>Courant</label><b id="roI">—</b><u>A</u></div>
+    <div class="ro"><label>Puissance</label><b id="roP">—</b><u>W</u></div>
+    <div class="ro"><label>Capacité étape</label><b id="roC">—</b><u>mAh</u></div>
+    <div class="ro"><label>Énergie étape</label><b id="roE">—</b><u>Wh</u></div>
+    <div class="ro"><label>R interne</label><b id="roR">—</b><u>mΩ</u></div>
+  </div>
+  <div class="modeline"><span id="modeLabel">—</span><span id="elapsed"></span></div>
+
+  <div class="grid2">
+    <div class="card chartcard">
+      <div class="cardhead"><h3 id="chartTitle">Mesures</h3>
+        <div class="legend"><i class="lv"></i>Tension <i class="li"></i>Courant</div></div>
+      <div id="liveChart" class="chart"></div>
+    </div>
+
+    <div class="card" id="runCard">
+      <div id="runIdle">
+        <h3>Lancer un test</h3>
+        <label class="f">Programme<select id="runProgram"></select></label>
+        <ol id="runPreview" class="steps mini"></ol>
+        <label class="f">Batterie (étiquette)<input id="runBattery" list="batteryList" placeholder="ex. 18650-A03"></label>
+        <datalist id="batteryList"></datalist>
+        <label class="f">Nom du test<input id="runName" placeholder="(nom du programme)"></label>
+        <label class="f">Notes<input id="runNotes" placeholder="optionnel"></label>
+        <button id="btnStart" class="primary">Démarrer</button>
+        <p id="runErr" class="err"></p>
+      </div>
+      <div id="runActive" hidden>
+        <h3 id="runTitle">Test en cours</h3>
+        <ol id="runSteps" class="steps"></ol>
+        <div class="row">
+          <button id="btnSkip">Étape suivante</button>
+          <button id="btnStop" class="danger">Arrêter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <details class="card log"><summary>Journal</summary><pre id="log"></pre></details>
+</section>
+
+<!-- ============================================================ PROGRAMMES -->
+<section id="tab-programs" class="tab">
+  <div class="split">
+    <div class="card list">
+      <div class="cardhead"><h3>Programmes</h3><button id="btnNewProg" class="small">+ Nouveau</button></div>
+      <ul id="progList" class="plist"></ul>
+    </div>
+    <div class="card" id="progEditor">
+      <div class="cardhead">
+        <input id="progName" class="title" placeholder="Nom du programme">
+        <span id="progRO" class="badge" hidden>prédéfini</span>
+      </div>
+      <ol id="progSteps" class="editsteps"></ol>
+      <div class="row">
+        <select id="addType"></select><button id="btnAddStep" class="small">+ Ajouter l'étape</button>
+      </div>
+      <div class="row end">
+        <button id="btnDelProg" class="danger small">Supprimer</button>
+        <button id="btnCopyProg" class="small">Dupliquer</button>
+        <button id="btnSaveProg" class="primary">Enregistrer</button>
+      </div>
+      <p id="progErr" class="err"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ HISTORIQUE -->
+<section id="tab-history" class="tab">
+  <div class="card">
+    <div class="cardhead"><h3>Tests</h3>
+      <div class="row"><input id="histFilter" placeholder="Filtrer (batterie, nom…)" class="small">
+        <button id="btnCompareSel" class="small">Comparer la sélection</button></div></div>
+    <div class="tablewrap"><table id="histTable">
+      <thead><tr><th></th><th>Date</th><th>Batterie</th><th>Test</th><th>État</th>
+        <th class="n">Capacité</th><th class="n">Énergie</th><th class="n">R int.</th><th class="n">Durée</th></tr></thead>
+      <tbody></tbody></table></div>
+  </div>
+  <div class="card" id="testDetail" hidden>
+    <div class="cardhead">
+      <h3 id="tdTitle"></h3>
+      <div class="row">
+        <a id="tdCsv" class="btn small" download>Export CSV</a>
+        <button id="tdEdit" class="small">Renommer</button>
+        <button id="tdDel" class="danger small">Supprimer</button>
+      </div>
+    </div>
+    <div id="tdChart" class="chart"></div>
+    <div class="tablewrap"><table id="tdSteps">
+      <thead><tr><th>#</th><th>Étape</th><th>Consigne</th><th class="n">Durée</th><th class="n">Capacité</th>
+        <th class="n">Énergie</th><th class="n">V début→fin</th><th class="n">R int.</th><th>Fin</th></tr></thead>
+      <tbody></tbody></table></div>
+    <p id="tdNotes" class="muted"></p>
+  </div>
+</section>
+
+<!-- =========================================================== COMPARAISON -->
+<section id="tab-compare" class="tab">
+  <div class="card">
+    <div class="cardhead"><h3>Classement des batteries</h3><span class="muted">dernier test complet de chaque étiquette</span></div>
+    <div class="tablewrap"><table id="batTable">
+      <thead><tr><th></th><th>#</th><th>Batterie</th><th class="n">Capacité</th><th class="n">Énergie</th>
+        <th class="n">R int.</th><th class="n">V moy.</th><th class="n">Meilleure</th><th class="n">Tests</th><th>Date</th></tr></thead>
+      <tbody></tbody></table></div>
+    <p class="muted">Coche des lignes pour superposer leurs courbes de décharge.</p>
+  </div>
+  <div class="card">
+    <div class="cardhead"><h3>Courbes de décharge (tension / capacité)</h3><div id="cmpLegend" class="legend"></div></div>
+    <div id="cmpChart" class="chart"></div>
+  </div>
+</section>
+</main>
+
+<script src="/static/uPlot.iife.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+services:
+  ebc:
+    build: .
+    container_name: ebc-web
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Chemin du port série. Mets "sim" pour le simulateur (sans matériel).
+      # Le chemin /dev/serial/by-id/... est stable même si tu débranches/rebranches.
+      EBC_PORT: ${EBC_PORT:-/dev/ttyUSB0}
+      EBC_SIM_SPEED: ${EBC_SIM_SPEED:-20}
+      TZ: Europe/Paris
+    volumes:
+      - ./data:/data
+      # /dev monté en entier + règles cgroup : le conteneur démarre même si
+      # l'EBC est débranché, et le retrouve quand on le rebranche.
+      - /dev:/dev
+    device_cgroup_rules:
+      - "c 188:* rmw"   # ttyUSB* (CH340, CP210x, FTDI…)
+      - "c 166:* rmw"   # ttyACM*
